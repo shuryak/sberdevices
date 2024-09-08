@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+* {
+  font-family: "Inter", sans-serif;
+  font-weight: 450;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.phone-input-wrapper {
+  position: relative;
+  width: 100%;
+
+  > .phone-input:first-child {
+    background-color: #fff;
+    left: 0;
+    position: absolute;
+    top: 0;
+  }
+
+  > :last-child .phone-input, > .phone-input:last-child {
+    background-color: hsla(0, 0%, 100%, 0);
+    position: relative;
+  }
+}
+
+label {
+  align-self: flex-start;
+  margin: 0 0 10px;
+  font-size: 14px;
+  padding: 0;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  text-align: center;
+  color: #595959;
+}
+
+input {
+  background-color: #fff;
+  border: 1px solid #d6d6d6;
+  outline: rgb(46, 108, 246) none;
+  border-radius: 10px;
+  color: #353535;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: .04s ease-in-out, .04s ease-in-out;
+
+  &:hover {
+    border-color: darken(#d6d6d6, 10);
+  }
+
+  &:focus {
+    border-color: rgb(46, 108, 246);
+    outline: 1px solid rgb(46, 108, 246);
+  }
+
+  &::selection {
+    background-color: rgba(46, 108, 246, 0.2);
+  }
+
+  &:disabled {
+    background: gray;
+  }
+
+  margin-bottom: 20px;
+}
+
+button {
+  background-color: rgb(46, 108, 246);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  outline: none;
+  padding: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border .17s ease-in-out, .17s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    color: #ffffff;
+    background-color: darken(rgb(46, 108, 246), 3);
+  }
+
+  &:active {
+    background-color: darken(rgb(46, 108, 246), 10);
+  }
+
+  &:disabled {
+    background-color: rgb(53, 63, 71);
+  }
+}
