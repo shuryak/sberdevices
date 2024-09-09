@@ -19,41 +19,41 @@ export const PhoneInput: React.FC<{
   });
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value.substring(e.target.value.length - 2, e.target.value.length) == '  ') {
+    const inputValue = e.target.value
+
+    if (inputValue.substring(e.target.value.length - 2, e.target.value.length) == '  ') {
       return
     }
 
-    const payload = e.target.value.replace(/[+7 ()-]/g, '')
+    const payload = inputValue.replace(/[+7 ()-]/g, '')
 
     if (!/^\d*$/.test(payload)) {
       return
     }
 
-    // TODO: refactor :)
     if (payload.length > 10) {
       return
-    } else if (payload.length < 3) {
-      setValue(`+7 (${payload}`)
-    } else if (payload.length === 3 && value[value.length - 1] == ' ') {
-      setValue(`+7 (${payload.slice(0, payload.length - 1)}`)
-    } else if (payload.length === 3) {
-      setValue(`+7 (${payload}) `)
-    } else if (payload.length > 3 && payload.length < 6) {
-      setValue(`+7 (${payload.substring(0, 3)}) ${payload.substring(3, payload.length)}`)
-    } else if (payload.length === 6 && value[value.length - 1] == '-') {
-      setValue(`+7 (${payload.substring(0, 3)}) ${payload.substring(3, payload.length - 1)}`)
-    } else if (payload.length === 6) {
-      setValue(`+7 (${payload.substring(0, 3)}) ${payload.substring(3, payload.length)}-`)
-    } else if (payload.length === 8 && value[value.length - 1] == '-') {
-      setValue(`+7 (${payload.substring(0, 3)}) ${payload.substring(3, 6)}-${payload.substring(6, payload.length - 1)}`)
-    } else if (payload.length === 8) {
-      setValue(`+7 (${payload.substring(0, 3)}) ${payload.substring(3, 6)}-${payload.substring(6, 8)}-`)
-    } else if (payload.length >= 9) {
-      setValue(`+7 (${payload.substring(0, 3)}) ${payload.substring(3, 6)}-${payload.substring(6, 8)}-${payload.substring(8, payload.length)}`)
-    } else if (payload.length >= 7) {
-      setValue(`+7 (${payload.substring(0, 3)}) ${payload.substring(3, 6)}-${payload.substring(6, payload.length)}`)
+    } 
+
+    let formattedValue = '+7'
+
+    if (payload.length > 0) {
+      formattedValue += ` (${payload.substring(0, 3)}`
     }
 
+    if (payload.length >= 4) {
+      formattedValue += `) ${payload.substring(3, 6)}`
+    }
+
+    if (payload.length >= 7) {
+      formattedValue += `-${payload.substring(6, 8)}`
+    }
+
+    if (payload.length >= 9) {
+      formattedValue += `-${payload.substring(8, 10)}`
+    }
+
+    setValue(formattedValue)
     onPhoneChange(payload, payload.length === 10)
   }
 
