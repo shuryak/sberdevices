@@ -13,10 +13,10 @@ export const PhoneInput: React.FC<{
     autoFocus &&
     setTimeout(() => {
       if (ref.current) {
-        ref.current.focus();
+        ref.current.focus()
       }
-    }, 1000);
-  });
+    }, 1000)
+  })
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value
