@@ -228,7 +228,18 @@ func YandexToSberDeviceState(
 	case yandex.DeviceInstanceBrightness:
 		value := int(yandexCapability.State.Value.(float64)) * 10
 
+		cur := currentState[sbertypes.StateCommandLightColour]
+
 		states = append(states,
+			&sbertypes.DeviceState{
+				Key:  cur.Key,
+				Type: sbertypes.SberDataTypeColor,
+				ColorValue: &sbertypes.DeviceStateColorValue{
+					Hue:        cur.ColorValue.Hue,
+					Saturation: cur.ColorValue.Saturation,
+					Value:      value,
+				},
+			},
 			&sbertypes.DeviceState{
 				Key:          sbertypes.StateCommandLightBrightness,
 				Type:         sbertypes.SberDataTypeInteger,
@@ -258,7 +269,17 @@ func YandexToSberDeviceState(
 			),
 		})
 	case yandex.DeviceInstanceHSV:
-		value := yandexCapability.State.Value.(map[string]interface{})
+		value := make(map[string]interface{})
+		if yandexCapability.State.Value == nil { // for Marusia command "turn on the black color"
+			value["h"] = float64(0)
+			value["s"] = float64(0)
+			value["v"] = float64(0)
+		} else {
+			// TODO: log type of value (check for ok on type assertion)
+			value = yandexCapability.State.Value.(map[string]interface{})
+		}
+
+		cur := currentState[sbertypes.StateCommandLightColour]
 
 		states = append(states,
 			&sbertypes.DeviceState{
@@ -271,7 +292,7 @@ func YandexToSberDeviceState(
 				ColorValue: &sbertypes.DeviceStateColorValue{
 					Hue:        int(value["h"].(float64)),
 					Saturation: int(value["s"].(float64)) * 10,
-					Value:      int(value["v"].(float64)) * 10,
+					Value:      cur.ColorValue.Value,
 				},
 			},
 		)
