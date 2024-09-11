@@ -10,16 +10,6 @@ import (
 	"github.com/shuryak/sberhack/pkg/yandex"
 )
 
-// TODO: start region refactor
-var nilableFalse = new(bool)
-var nilableTrue = new(bool)
-
-func init() {
-	*nilableTrue = true
-}
-
-// TODO: end region refactor
-
 func SberToYandexDevices(sberDevices []sbertypes.DeviceItem) []yandex.Device {
 	var yandexDevices []yandex.Device
 
@@ -93,7 +83,9 @@ func sberToYandexDeviceCapabilityState(
 	case yandex.DeviceInstanceOn:
 		yandexState.Value = reportedState.BoolValue
 	case yandex.DeviceInstanceBrightness:
-		yandexState.Value, _ = strconv.Atoi(reportedState.IntegerValue)
+		value, _ := strconv.Atoi(reportedState.IntegerValue) // TODO: handle errors for atoi everywhere
+		value /= 10
+		yandexState.Value = value
 	case yandex.DeviceInstanceTemperatureK:
 		value, _ := strconv.Atoi(reportedState.IntegerValue)
 		value = 7*value + 2000 // normalize [0, 1000] to [2000, 9000]
@@ -234,21 +226,11 @@ func YandexToSberDeviceState(
 			BoolValue: yandexCapability.State.Value.(bool),
 		})
 	case yandex.DeviceInstanceBrightness:
-		value := int(yandexCapability.State.Value.(float64))
-
-		cur := currentState[sbertypes.StateCommandLightColour]
+		value := int(yandexCapability.State.Value.(float64)) * 10
 
 		states = append(states,
 			&sbertypes.DeviceState{
-				Key:  cur.Key,
-				Type: sbertypes.SberDataTypeColor,
-				ColorValue: &sbertypes.DeviceStateColorValue{
-					Hue:        cur.ColorValue.Hue,
-					Saturation: cur.ColorValue.Saturation,
-					Value:      value * 10,
-				},
-			},
-			&sbertypes.DeviceState{
+				Key:          sbertypes.StateCommandLightBrightness,
 				Type:         sbertypes.SberDataTypeInteger,
 				IntegerValue: strconv.Itoa(value),
 			},
@@ -447,3 +429,12 @@ var yandexMapToSberColorSceneID = map[yandex.ColorSceneID]sbertypes.ColorSceneID
 	yandex.ColorSceneIDGarland: sbertypes.ColorSceneIDChristmas,
 	yandex.ColorSceneIDRest:    sbertypes.ColorSceneIDFito,
 }
+
+func nilableBool(v bool) *bool {
+	return &v
+}
+
+var (
+	nilableFalse = nilableBool(false)
+	nilableTrue  = nilableBool(true)
+)
