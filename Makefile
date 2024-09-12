@@ -21,11 +21,15 @@ CONNECTION = $(REMOTE_USERNAME)@$(REMOTE_HOSTNAME)
 # REGION: BUILD
 .PHONY: build-linux-debug
 build-linux-debug:
+	@echo ">> Building $(DEBUG_BIN_NAME) (debug) to $(CONNECTION)"
 	@env GOOS=linux GOARCH=amd64 go build -gcflags "all=-N -l" -o $(DEBUG_BIN_NAME) -v cmd/sberhack/*.go
+	@echo "   Done."
 
 .PHONY: build-linux-prod
 build-linux-prod:
+	@echo ">> Building $(PROD_BIN_NAME) (production) to $(CONNECTION)"
 	@env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o $(PROD_BIN_NAME) -v cmd/sberhack/*.go
+	@echo "   Done."
 # END REGION: BUILD
 
 # REGION: UPLOADING
