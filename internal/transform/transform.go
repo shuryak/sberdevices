@@ -248,7 +248,7 @@ func YandexToSberDeviceState(
 		)
 	case yandex.DeviceInstanceTemperatureK:
 		value := int(yandexCapability.State.Value.(float64))
-		value = ((value - 2000) * 1000) / 9000
+		value = ((value - 2000) * 1000) / 7000
 
 		states = append(states,
 			&sbertypes.DeviceState{
