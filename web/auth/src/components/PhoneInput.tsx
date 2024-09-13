@@ -1,11 +1,12 @@
-import React, {useEffect, useRef, useState} from 'react'
+import React, { useEffect, useRef, useState} from 'react'
+import InputMask from 'react-input-mask'
 
 export const PhoneInput: React.FC<{
   onPhoneChange: (phone: string, isFull: boolean) => void,
   autoFocus: boolean,
   disabled: boolean
 }> = ({onPhoneChange, autoFocus, disabled}) => {
-  const [value, setValue] = useState<string>('+7 (')
+  const [value, setValue] = useState<string>('')
   const [placeholder, setPlaceholder] = useState<string>('+7 (___) ___-__-__')
   const ref = useRef<HTMLInputElement>(null)
 
@@ -18,49 +19,18 @@ export const PhoneInput: React.FC<{
     }, 1000)
   })
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value
-
-    if (inputValue.substring(e.target.value.length - 2, e.target.value.length) == '  ') {
-      return
-    }
-
-    const payload = inputValue.replace(/[+7 ()-]/g, '')
-
-    if (!/^\d*$/.test(payload)) {
-      return
-    }
-
-    if (payload.length > 10) {
-      return
-    } 
-
-    let formattedValue = '+7'
-
-    if (payload.length > 0) {
-      formattedValue += ` (${payload.substring(0, 3)}`
-    }
-
-    if (payload.length >= 4) {
-      formattedValue += `) ${payload.substring(3, 6)}`
-    }
-
-    if (payload.length >= 7) {
-      formattedValue += `-${payload.substring(6, 8)}`
-    }
-
-    if (payload.length >= 9) {
-      formattedValue += `-${payload.substring(8, 10)}`
-    }
-
-    setValue(formattedValue)
-    onPhoneChange(payload, payload.length === 10)
-  }
-
   useEffect(() => {
     const defaultPlaceholder = '+7 (___) ___-__-__'
+
     setPlaceholder(value + defaultPlaceholder.substring(value.length, defaultPlaceholder.length))
   }, [value])
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const payload = e.target.value.replace(/[+7 _()-]/g, '')
+
+    setValue(e.target.value)
+    onPhoneChange(payload, payload.length == 10)
+  }
 
   return (
     <>
@@ -73,14 +43,18 @@ export const PhoneInput: React.FC<{
           autoComplete="off"
           disabled
         />
-        <input
+        <InputMask
+          mask="+7 (999) 999-99-99"
+          value={value}
+          onChange={onChange}
+          alwaysShowMask={true}
+          maskPlaceholder={null}
           id="phone"
           name="phone"
           className="phone-input"
           type="tel"
           autoComplete="off"
-          value={value}
-          onChange={onChange}
+          autoFocus={autoFocus}
           ref={ref}
           disabled={disabled}
         />
