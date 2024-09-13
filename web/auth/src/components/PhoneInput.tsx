@@ -15,6 +15,7 @@ export const PhoneInput: React.FC<{
     setTimeout(() => {
       if (ref.current) {
         ref.current.focus()
+        ref.current.click()
       }
     }, 1000)
   })
@@ -55,7 +56,7 @@ export const PhoneInput: React.FC<{
           type="tel"
           autoComplete="off"
           autoFocus={autoFocus}
-          ref={ref}
+          inputRef={ref}
           disabled={disabled}
         />
       </div>
