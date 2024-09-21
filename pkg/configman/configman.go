@@ -28,10 +28,8 @@ func Collect(cfgDest interface{}, opts ...RunnableOption) error {
 	return reflectFill(
 		structValue,
 		func(structField reflect.StructField, structValue reflect.Value) (filler string, skip bool, err error) {
-			reqFlag, _ := strconv.ParseBool(structField.Tag.Get("required"))
-
 			if structValue.IsZero() {
-				if reqFlag {
+				if reqFlag, _ := strconv.ParseBool(structField.Tag.Get("required")); reqFlag {
 					return "", false, fmt.Errorf("field \"%s\" is required", structField.Name)
 				}
 

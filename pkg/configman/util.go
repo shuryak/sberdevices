@@ -35,7 +35,11 @@ func reflectFill(structElem reflect.Value, strategy fillStrategy) error {
 		kind := field.Kind()
 
 		if kind == reflect.Struct {
-			return reflectFill(field, strategy)
+			err = reflectFill(field, strategy)
+			if err != nil {
+				return err
+			}
+			continue
 		}
 
 		if skip {
