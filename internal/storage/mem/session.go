@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shuryak/sberhack/internal/model"
+	"github.com/shuryak/sberdevices/internal/model"
 )
 
 type SessionStorage struct {

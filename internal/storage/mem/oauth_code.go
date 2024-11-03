@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/shuryak/sberhack/internal/model"
-	"github.com/shuryak/sberhack/pkg/pkce"
-	"github.com/shuryak/sberhack/pkg/strrand"
+	"github.com/shuryak/sberdevices/internal/model"
+	"github.com/shuryak/sberdevices/pkg/pkce"
+	"github.com/shuryak/sberdevices/pkg/strrand"
 )
 
 type OAuthCodeStorage struct {

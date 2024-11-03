@@ -1,10 +1,10 @@
 package devices
 
 import (
-	"github.com/shuryak/sberhack/internal/api"
-	"github.com/shuryak/sberhack/internal/api/common"
-	"github.com/shuryak/sberhack/internal/oauth"
-	"github.com/shuryak/sberhack/pkg/smarthome/client"
+	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/api/common"
+	"github.com/shuryak/sberdevices/internal/oauth"
+	"github.com/shuryak/sberdevices/pkg/smarthome/client"
 )
 
 type Handlers struct {

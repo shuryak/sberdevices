@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/shuryak/sberhack/internal/api"
+	"github.com/shuryak/sberdevices/internal/api"
 )
 
 type TokenResp struct {

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/shuryak/sberhack/pkg/sbertypes"
-	"github.com/shuryak/sberhack/pkg/yandex"
+	"github.com/shuryak/sberdevices/pkg/sbertypes"
+	"github.com/shuryak/sberdevices/pkg/yandex"
 )
 
 func SberToYandexDevices(sberDevices []sbertypes.DeviceItem) []yandex.Device {

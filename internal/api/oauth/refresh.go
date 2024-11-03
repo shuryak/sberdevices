@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/shuryak/sberhack/internal/api"
+	"github.com/shuryak/sberdevices/internal/api"
 )
 
 type RefreshResp struct {

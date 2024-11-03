@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/shuryak/sberhack/pkg/sbertypes"
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint"
+	"github.com/shuryak/sberdevices/pkg/sbertypes"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint"
 )
 
 type Client struct {

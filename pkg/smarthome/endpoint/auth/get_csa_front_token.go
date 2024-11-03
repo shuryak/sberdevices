@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/shuryak/sberhack/pkg/pkce"
-	"github.com/shuryak/sberhack/pkg/sbertypes"
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint"
+	"github.com/shuryak/sberdevices/pkg/pkce"
+	"github.com/shuryak/sberdevices/pkg/sbertypes"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint"
 )
 
 func GetCSAFrontToken(authCode string, pkcePair *pkce.Pair) *endpoint.Endpoint {

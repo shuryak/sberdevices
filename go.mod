@@ -1,4 +1,4 @@
-module github.com/shuryak/sberhack
+module github.com/shuryak/sberdevices
 
 go 1.23
 

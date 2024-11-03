@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/shuryak/sberhack/pkg/pkce"
-	"github.com/shuryak/sberhack/pkg/sbertypes"
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint/auth"
+	"github.com/shuryak/sberdevices/pkg/pkce"
+	"github.com/shuryak/sberdevices/pkg/sbertypes"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint/auth"
 )
 
 type Authorizer struct {

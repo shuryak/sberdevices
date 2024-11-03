@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/shuryak/sberhack/pkg/strrand"
+	"github.com/shuryak/sberdevices/pkg/strrand"
 )
 
 type Pair struct {

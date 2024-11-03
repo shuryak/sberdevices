@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/shuryak/sberhack/pkg/sbertypes"
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint"
+	"github.com/shuryak/sberdevices/pkg/sbertypes"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint"
 )
 
 func RefreshCSAFrontToken(refreshToken string) *endpoint.Endpoint {

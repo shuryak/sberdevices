@@ -3,9 +3,9 @@ package adapter
 import (
 	"context"
 
-	"github.com/shuryak/sberhack/internal/oauth"
-	"github.com/shuryak/sberhack/pkg/pkce"
-	"github.com/shuryak/sberhack/pkg/smarthome/auth"
+	"github.com/shuryak/sberdevices/internal/oauth"
+	"github.com/shuryak/sberdevices/pkg/pkce"
+	"github.com/shuryak/sberdevices/pkg/smarthome/auth"
 )
 
 type Authorizer struct {

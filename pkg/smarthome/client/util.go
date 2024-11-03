@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint"
-	"github.com/shuryak/sberhack/pkg/smarthome/util"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint"
+	"github.com/shuryak/sberdevices/pkg/smarthome/util"
 )
 
 func (c *Client) runEndpoint(ctx context.Context, e *endpoint.Endpoint, dest ...interface{}) error {

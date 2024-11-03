@@ -3,7 +3,7 @@ package oauth
 import (
 	"log"
 
-	"github.com/shuryak/sberhack/internal/oauth"
+	"github.com/shuryak/sberdevices/internal/oauth"
 )
 
 type Handlers struct {

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/shuryak/sberhack/pkg/query"
-	"github.com/shuryak/sberhack/pkg/router"
+	"github.com/shuryak/sberdevices/pkg/query"
+	"github.com/shuryak/sberdevices/pkg/router"
 )
 
 type Context struct {

@@ -6,16 +6,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shuryak/sberhack/internal/adapter"
-	"github.com/shuryak/sberhack/internal/api"
-	"github.com/shuryak/sberhack/internal/api/devices"
-	oauthApi "github.com/shuryak/sberhack/internal/api/oauth"
-	"github.com/shuryak/sberhack/internal/config"
-	"github.com/shuryak/sberhack/internal/oauth"
-	"github.com/shuryak/sberhack/internal/storage/mem"
-	"github.com/shuryak/sberhack/pkg/router"
-	"github.com/shuryak/sberhack/pkg/smarthome/auth"
-	"github.com/shuryak/sberhack/pkg/smarthome/client"
+	"github.com/shuryak/sberdevices/internal/adapter"
+	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/api/devices"
+	oauthApi "github.com/shuryak/sberdevices/internal/api/oauth"
+	"github.com/shuryak/sberdevices/internal/config"
+	"github.com/shuryak/sberdevices/internal/oauth"
+	"github.com/shuryak/sberdevices/internal/storage/mem"
+	"github.com/shuryak/sberdevices/pkg/router"
+	"github.com/shuryak/sberdevices/pkg/smarthome/auth"
+	"github.com/shuryak/sberdevices/pkg/smarthome/client"
 )
 
 func Run() {

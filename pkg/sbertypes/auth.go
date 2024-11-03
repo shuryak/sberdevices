@@ -1,8 +1,8 @@
 package sbertypes
 
 import (
-	"github.com/shuryak/sberhack/pkg/pkce"
-	"github.com/shuryak/sberhack/pkg/strrand"
+	"github.com/shuryak/sberdevices/pkg/pkce"
+	"github.com/shuryak/sberdevices/pkg/strrand"
 )
 
 const AuthSmartHomeClientID = "6835fd63-22c8-4c20-bd4a-2bba906afe5f"

@@ -3,9 +3,9 @@ package auth
 import (
 	"net/http"
 
-	"github.com/shuryak/sberhack/pkg/pkce"
-	"github.com/shuryak/sberhack/pkg/sbertypes"
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint"
+	"github.com/shuryak/sberdevices/pkg/pkce"
+	"github.com/shuryak/sberdevices/pkg/sbertypes"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint"
 )
 
 func SendSMS(phone string) (*endpoint.Endpoint, *pkce.Pair) {

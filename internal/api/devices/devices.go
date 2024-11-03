@@ -4,10 +4,10 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/shuryak/sberhack/internal/api"
-	"github.com/shuryak/sberhack/internal/transform"
-	"github.com/shuryak/sberhack/pkg/smarthome/client"
-	"github.com/shuryak/sberhack/pkg/yandex"
+	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/transform"
+	"github.com/shuryak/sberdevices/pkg/smarthome/client"
+	"github.com/shuryak/sberdevices/pkg/yandex"
 )
 
 type listReq struct{}

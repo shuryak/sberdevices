@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/shuryak/sberhack/internal/api"
-	"github.com/shuryak/sberhack/internal/api/common"
+	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/api/common"
 )
 
 func (h *Handlers) Tokens(ctx *api.Context) {

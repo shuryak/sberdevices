@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/shuryak/sberhack/pkg/sbertypes"
+	"github.com/shuryak/sberdevices/pkg/sbertypes"
 )
 
 func State(accessToken string, deviceID string, state ...*sbertypes.DeviceState) *Endpoint {

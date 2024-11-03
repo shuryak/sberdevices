@@ -3,7 +3,7 @@ package config
 import (
 	"log"
 
-	"github.com/shuryak/sberhack/pkg/configman"
+	"github.com/shuryak/sberdevices/pkg/configman"
 )
 
 type Config struct {

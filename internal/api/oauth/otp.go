@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/shuryak/sberhack/internal/api"
+	"github.com/shuryak/sberdevices/internal/api"
 )
 
 type otpReq struct {

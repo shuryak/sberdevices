@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/shuryak/sberhack/pkg/strrand"
+	"github.com/shuryak/sberdevices/pkg/strrand"
 )
 
 type Session struct {

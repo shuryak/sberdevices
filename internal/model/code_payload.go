@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/shuryak/sberhack/pkg/pkce"
+	"github.com/shuryak/sberdevices/pkg/pkce"
 )
 
 type AuthCodePayload struct {

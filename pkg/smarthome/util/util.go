@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint"
 )
 
 func RunEndpoint(_ context.Context, client *http.Client, e *endpoint.Endpoint, dest ...interface{}) (int, error) {

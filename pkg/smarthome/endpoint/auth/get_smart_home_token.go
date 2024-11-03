@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/shuryak/sberhack/pkg/smarthome/endpoint"
+	"github.com/shuryak/sberdevices/pkg/smarthome/endpoint"
 )
 
 func GetSmartHomeToken(csaFrontToken string) *endpoint.Endpoint {
