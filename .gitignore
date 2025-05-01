@@ -21,5 +21,6 @@ __debug*
 
 cmd/experiments
 sberhack
+!cmd/sberhack
 sberhack_DEBUG
 .env
