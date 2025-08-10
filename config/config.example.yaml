@@ -1,0 +1,16 @@
+server:
+  port: 8080
+postgres:
+  user: user
+  host: postgres
+  port: 5432
+  database: user
+auth:
+  code_length: 64
+  access_token_length: 128
+  refresh_token_length: 128
+clients:
+  - id: client_1
+    secret: secret_1
+  - id: client_2
+    secret: secret_2

@@ -7,15 +7,16 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/shuryak/sberdevices/pkg/query"
-	"github.com/shuryak/sberdevices/pkg/router"
+	"github.com/shuryak/sberdevices/internal/pkg/query"
+	"github.com/shuryak/sberdevices/internal/pkg/router"
 )
 
 type Context struct {
 	context.Context
-	cancel context.CancelFunc
-	w      http.ResponseWriter
-	r      *http.Request
+	cancel     context.CancelFunc
+	errHandler func(err error) (interface{}, int)
+	w          http.ResponseWriter
+	r          *http.Request
 }
 
 // Check for implementation
@@ -36,6 +37,19 @@ func (ctx *Context) SetHTTPWriter(w http.ResponseWriter) {
 
 func (ctx *Context) SetHTTPRequest(r *http.Request) {
 	ctx.r = r
+}
+
+func (ctx *Context) SetErrHandler(errHandler func(err error) (interface{}, int)) {
+	ctx.errHandler = errHandler
+}
+
+func (ctx *Context) InvokeErrHandler(err error) bool {
+	if ctx.errHandler != nil {
+		_ = ctx.WriteResponse(ctx.errHandler(err))
+		return true
+	}
+
+	return false
 }
 
 func (ctx *Context) StopChain() {
@@ -99,7 +113,7 @@ func (ctx *Context) GetHeader(key string) string {
 	return ctx.r.Header.Get(key)
 }
 
-func (ctx *Context) WriteResponse(statusCode int, resp interface{}) error {
+func (ctx *Context) WriteResponse(resp interface{}, statusCode int) error {
 	ctx.StopChain()
 
 	data, err := json.Marshal(resp)

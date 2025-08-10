@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/shuryak/sberdevices/internal/oauth"
-	"github.com/shuryak/sberdevices/pkg/pkce"
-	"github.com/shuryak/sberdevices/pkg/smarthome/auth"
+	"github.com/shuryak/sberdevices/internal/pkg/pkce"
+	"github.com/shuryak/sberdevices/internal/pkg/smarthome/auth"
 )
 
 type Authorizer struct {

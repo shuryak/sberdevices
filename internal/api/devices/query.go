@@ -5,20 +5,20 @@ import (
 	"net/http"
 
 	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/pkg/smarthome/client"
+	yandex2 "github.com/shuryak/sberdevices/internal/pkg/yandex"
 	"github.com/shuryak/sberdevices/internal/transform"
-	"github.com/shuryak/sberdevices/pkg/smarthome/client"
-	"github.com/shuryak/sberdevices/pkg/yandex"
 )
 
 type queryReq struct {
-	yandex.DevicesQueryRequest
+	yandex2.DevicesQueryRequest
 }
 
 func (req queryReq) Validate(_ *api.Context) error {
 	return nil
 }
 
-func (h *Handlers) DevicesQuery(ctx *api.Context, req *queryReq) (*yandex.DevicesResponse, int) {
+func (h *Handlers) DevicesQuery(ctx *api.Context, req *queryReq) (*yandex2.DevicesResponse, int) {
 	ids := make([]string, len(req.Devices))
 	for i := range req.Devices {
 		ids[i] = req.Devices[i].ID
@@ -33,9 +33,9 @@ func (h *Handlers) DevicesQuery(ctx *api.Context, req *queryReq) (*yandex.Device
 		return nil, http.StatusInternalServerError
 	}
 
-	return &yandex.DevicesResponse{
+	return &yandex2.DevicesResponse{
 		RequestID: ctx.GetHeader("X-Request-Id"),
-		Payload: &yandex.DevicesResponsePayload{
+		Payload: &yandex2.DevicesResponsePayload{
 			Devices: transform.SberToYandexDevicesState(devices.Result),
 		},
 	}, http.StatusOK

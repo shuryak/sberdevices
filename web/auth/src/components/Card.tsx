@@ -7,16 +7,16 @@ import PulseLoader from 'react-spinners/PulseLoader'
 import axios from 'axios'
 
 interface Phone {
-  phone: string;
-  ok: boolean;
+  phone: string
+  ok: boolean
 }
 
 interface OAuthStartResponse {
-  code: string;
+  code: string
 }
 
 interface OAuthOTPResponse {
-  ok: boolean;
+  ok: boolean
 }
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sdprovider.ru'
@@ -42,13 +42,13 @@ export const Card = () => {
         }
 
         const searchParams = new URLSearchParams(window.location.search)
-        const redirect = new URL(searchParams.get('redirect_uri'))
         const state = searchParams.get('state')
 
         const redirectSearchParams = new URLSearchParams()
         redirectSearchParams.set('state', state)
         redirectSearchParams.set('code', oauthCode)
 
+        const redirect = new URL(searchParams.get('redirect_uri'))
         redirect.search = redirectSearchParams.toString()
 
         window.location.replace(redirect)

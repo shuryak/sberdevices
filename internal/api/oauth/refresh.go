@@ -44,14 +44,14 @@ func (h *Handlers) Refresh(ctx *api.Context, req *refreshReq) (*RefreshResp, int
 	session, err := h.flow.RefreshSession(ctx, req.RefreshToken)
 	if err != nil {
 		h.log.Printf("refresh session failed, err: %v\n", err)
-		_ = ctx.WriteResponse(http.StatusUnauthorized, nil)
+		_ = ctx.WriteResponse(nil, http.StatusUnauthorized)
 		return nil, http.StatusUnauthorized // TODO: everywhere return error json object
 	}
 
 	return &RefreshResp{
 		AccessToken:  session.AccessToken,
 		TokenType:    "bearer",
-		ExpiresIn:    int(session.ThirdPartyAccessTokenTTL.Seconds()),
+		ExpiresIn:    int(session.SmartHomeAccessTokenTTL.Seconds()),
 		RefreshToken: session.RefreshToken,
 	}, http.StatusOK
 }

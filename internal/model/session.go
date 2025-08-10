@@ -2,38 +2,53 @@ package model
 
 import (
 	"time"
-
-	"github.com/shuryak/sberdevices/pkg/strrand"
 )
 
 type Session struct {
-	AuthCode                 string
-	OTPReceiverID            string
-	AccessToken              string
-	RefreshToken             string
-	ThirdPartyAccessToken    string
-	ThirdPartyRefreshToken   string
-	ThirdPartyAccessTokenTTL time.Duration
-	RefreshTokenExpiresTTL   time.Duration
-	UpdatedAt                time.Time
+	OTPReceiverID string
+
+	AccessToken  string
+	RefreshToken string
+
+	SmartHomeAccessToken    string
+	SmartHomeAccessTokenTTL time.Duration
+
+	SmartHomeRefreshToken string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewSession(
-	authCode string,
-	otpReceiverID string,
-	accessTokenLength, refreshTokenLength int,
-	thirdPartyAccessToken, thirdPartyRefreshToken string,
-	thirdPartyTokenTTL, refreshTokenTTL time.Duration,
+	otpReceiverID, accessToken, refreshToken string, smartHomeAccessToken string,
+	smartHomeAccessTokenTTL time.Duration, smartHomeRefreshToken string,
+) *Session {
+	now := time.Now()
+
+	return &Session{
+		OTPReceiverID:           otpReceiverID,
+		AccessToken:             accessToken,
+		RefreshToken:            refreshToken,
+		SmartHomeAccessToken:    smartHomeAccessToken,
+		SmartHomeAccessTokenTTL: smartHomeAccessTokenTTL,
+		SmartHomeRefreshToken:   smartHomeRefreshToken,
+		CreatedAt:               now,
+		UpdatedAt:               now,
+	}
+}
+
+func (s *Session) Refresh(
+	accessToken, refreshToken, smartHomeAccessToken string, smartHomeAccessTokenTTL time.Duration,
+	smartHomeRefreshToken string,
 ) *Session {
 	return &Session{
-		AuthCode:                 authCode,
-		OTPReceiverID:            otpReceiverID,
-		AccessToken:              strrand.RandSeqStr(accessTokenLength),
-		RefreshToken:             strrand.RandSeqStr(refreshTokenLength),
-		ThirdPartyAccessToken:    thirdPartyAccessToken,
-		ThirdPartyRefreshToken:   thirdPartyRefreshToken,
-		ThirdPartyAccessTokenTTL: thirdPartyTokenTTL,
-		RefreshTokenExpiresTTL:   refreshTokenTTL,
-		UpdatedAt:                time.Now(),
+		OTPReceiverID:           s.OTPReceiverID,
+		AccessToken:             accessToken,
+		RefreshToken:            refreshToken,
+		SmartHomeAccessToken:    smartHomeAccessToken,
+		SmartHomeAccessTokenTTL: smartHomeAccessTokenTTL,
+		SmartHomeRefreshToken:   smartHomeRefreshToken,
+		CreatedAt:               s.CreatedAt,
+		UpdatedAt:               time.Now(),
 	}
 }

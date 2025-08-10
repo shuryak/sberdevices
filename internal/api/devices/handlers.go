@@ -4,7 +4,7 @@ import (
 	"github.com/shuryak/sberdevices/internal/api"
 	"github.com/shuryak/sberdevices/internal/api/common"
 	"github.com/shuryak/sberdevices/internal/oauth"
-	"github.com/shuryak/sberdevices/pkg/smarthome/client"
+	"github.com/shuryak/sberdevices/internal/pkg/smarthome/client"
 )
 
 type Handlers struct {

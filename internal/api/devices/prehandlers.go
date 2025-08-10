@@ -19,6 +19,6 @@ func (h *Handlers) Tokens(ctx *api.Context) {
 
 	// TODO: good functions to get this ctx values
 	ctx.Context = context.WithValue(ctx.Context, common.CtxKeyAccessToken, session.AccessToken)
-	ctx.Context = context.WithValue(ctx.Context, common.CtxKeyThirdPartyAccessToken, session.ThirdPartyAccessToken)
-	ctx.Context = context.WithValue(ctx.Context, common.CtxKeyThirdPartyRefreshToken, session.ThirdPartyRefreshToken)
+	ctx.Context = context.WithValue(ctx.Context, common.CtxKeyThirdPartyAccessToken, session.SmartHomeAccessToken)
+	ctx.Context = context.WithValue(ctx.Context, common.CtxKeyThirdPartyRefreshToken, session.SmartHomeRefreshToken)
 }

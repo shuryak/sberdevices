@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS oauth_code;
+
+DROP TABLE IF EXISTS sessions;

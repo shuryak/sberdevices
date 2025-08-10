@@ -24,7 +24,7 @@ type StartResp struct {
 	Code string `json:"code"`
 }
 
-func (h *Handlers) Start(_ *api.Context, req *startReq) (*StartResp, int) {
+func (h *Handlers) Authorize(_ *api.Context, req *startReq) (*StartResp, int) {
 	code, err := h.flow.Start(context.Background(), req.Phone)
 	if err != nil {
 		h.log.Printf("failed to start flow, err: %v\n", err)

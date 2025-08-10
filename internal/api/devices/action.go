@@ -5,23 +5,23 @@ import (
 	"net/http"
 
 	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/pkg/smarthome/client"
+	yandex2 "github.com/shuryak/sberdevices/internal/pkg/yandex"
 	"github.com/shuryak/sberdevices/internal/transform"
-	"github.com/shuryak/sberdevices/pkg/smarthome/client"
-	"github.com/shuryak/sberdevices/pkg/yandex"
 )
 
 type actionReq struct {
-	yandex.DevicesActionRequest
+	yandex2.DevicesActionRequest
 }
 
 func (req actionReq) Validate(_ *api.Context) error {
 	return nil
 }
 
-func (h *Handlers) DevicesAction(ctx *api.Context, req *actionReq) (*yandex.DevicesResponse, int) {
-	resp := &yandex.DevicesResponse{
+func (h *Handlers) DevicesAction(ctx *api.Context, req *actionReq) (*yandex2.DevicesResponse, int) {
+	resp := &yandex2.DevicesResponse{
 		RequestID: ctx.GetHeader("X-Request-Id"),
-		Payload:   &yandex.DevicesResponsePayload{},
+		Payload:   &yandex2.DevicesResponsePayload{},
 	}
 
 	ids := make([]string, len(req.Payload.Devices))
@@ -42,10 +42,10 @@ func (h *Handlers) DevicesAction(ctx *api.Context, req *actionReq) (*yandex.Devi
 	devicesMap := devices.Result.ToMap()
 
 	for i := range req.Payload.Devices {
-		device := yandex.Device{
+		device := yandex2.Device{
 			ID: req.Payload.Devices[i].ID,
-			ActionResult: &yandex.DeviceActionResult{
-				Status: yandex.ResultStatusDone,
+			ActionResult: &yandex2.DeviceActionResult{
+				Status: yandex2.ResultStatusDone,
 			},
 		}
 
@@ -64,12 +64,12 @@ func (h *Handlers) DevicesAction(ctx *api.Context, req *actionReq) (*yandex.Devi
 				return nil, http.StatusInternalServerError
 			}
 
-			device.Capabilities = append(device.Capabilities, yandex.DeviceCapability{
+			device.Capabilities = append(device.Capabilities, yandex2.DeviceCapability{
 				Type: req.Payload.Devices[i].Capabilities[j].Type,
-				State: &yandex.DeviceCapabilityState{
+				State: &yandex2.DeviceCapabilityState{
 					Instance: req.Payload.Devices[i].Capabilities[j].State.Instance,
-					ActionResult: &yandex.DeviceActionResult{
-						Status: yandex.ResultStatusDone,
+					ActionResult: &yandex2.DeviceActionResult{
+						Status: yandex2.ResultStatusDone,
 					},
 				},
 			})

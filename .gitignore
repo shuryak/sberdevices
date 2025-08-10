@@ -23,4 +23,11 @@ cmd/experiments
 sberhack
 !cmd/sberhack
 sberhack_DEBUG
+
 .env
+config/config.yaml
+build/nginx/nginx.conf
+build/nginx/conf.d/default.conf
+
+.mnt
+.tmp

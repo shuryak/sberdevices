@@ -1,19 +1,15 @@
 package oauth
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
+	"time"
+	"unicode/utf8"
 
 	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/config"
 )
-
-type TokenResp struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-}
 
 type tokenReq struct {
 	GrantType    string `query:"grant_type"`
@@ -25,37 +21,57 @@ type tokenReq struct {
 
 func (p tokenReq) Validate(_ *api.Context) error {
 	if p.GrantType != "authorization_code" {
-		return fmt.Errorf("grant_type must be 'authorization_code'")
+		return ErrOAuthUnsupportedGrantType
 	}
-	// if utf8.RuneCountInString(p.Code) != 64 { // TODO: code length from config
-	// 	return fmt.Errorf("invalid code")
-	// }
 	if _, err := url.ParseRequestURI(p.RedirectURI); err != nil {
-		return fmt.Errorf("invalid redirect_uri")
-	}
-	if len(p.ClientID) == 0 { // TODO: client_id from config
-		return fmt.Errorf("invalid client_id")
-	}
-	if len(p.ClientSecret) == 0 { // TODO: client_secret from config
-		return fmt.Errorf("invalid client_secret")
+		return ErrInvalidRedirectURI
 	}
 
 	return nil
 }
 
+type TokenResp struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+func (p tokenReq) AdditionalValidate(_ *api.Context, cfg *config.Config) error {
+	if uint(utf8.RuneCountInString(p.Code)) != cfg.Auth.CodeLength {
+		return errors.New("invalid code")
+	}
+	// if cfg.Clients.CheckClient(p.ClientID, p.ClientSecret) {
+	// 	return errors.New("invalid client_id and client_secret pair")
+	// }
+
+	return nil
+}
+
+// Token - https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3
 func (h *Handlers) Token(ctx *api.Context, req *tokenReq) (*TokenResp, int) {
+	if err := req.AdditionalValidate(ctx, h.cfg); err != nil {
+		if !ctx.InvokeErrHandler(err) {
+			h.log.Println("no error handler provided!")
+		}
+		return nil, 0
+	}
+
 	h.log.Println("oauth: token")
 
-	session, err := h.flow.GetSessionByAuthCode(ctx, req.Code)
+	session, err := h.flow.ExchangeAuthCode(ctx, req.Code)
 	if err != nil {
 		h.log.Printf("get session by auth code failed, err: %v\n", err)
 		return nil, http.StatusBadRequest
 	}
 
 	return &TokenResp{
-		AccessToken:  session.AccessToken,
-		TokenType:    "bearer",
-		ExpiresIn:    int(session.ThirdPartyAccessTokenTTL.Seconds()),
+		AccessToken: session.AccessToken,
+		TokenType:   "bearer",
+		// ExpiresIn:    int(session.SmartHomeAccessTokenTTL.Seconds()),
+		ExpiresIn:    int((15 * time.Second).Seconds()),
 		RefreshToken: session.RefreshToken,
 	}, http.StatusOK
 }
+
+var ErrInvalidRedirectURI = errors.New("invalid redirect_uri")

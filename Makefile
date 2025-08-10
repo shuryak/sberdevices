@@ -1,97 +1,81 @@
-ifneq (,$(wildcard .env))
-    include .env
+ifneq (,$(wildcard ./config/.env))
+	include ./config/.env
+	export
 endif
 
-CONNECTION = $(REMOTE_USERNAME)@$(REMOTE_HOSTNAME)
+REMOTE_CONNECTION = $(REMOTE_USERNAME)@$(REMOTE_HOSTNAME)
 
-# EXAMPLES:
-# DEBUG_BIN_NAME = "sberhack_DEBUG"
-# DEBUG_DIR = "~/debug"
-# DEBUG_WEB_DIR = "~/debug/web"
-# DEBUG_SYSTEMCTL_UNIT = "sberdevices-debug.service"
-# DEBUG_API_BASE_URL = "https://sdprovider.ru/dev"
+.PHONY: remote-deploy
+remote-deploy: image-tar-backend-prod image-tar-web-auth
+	@echo ">> Remote deploy to $(REMOTE_CONNECTION)"
+	@ssh $(REMOTE_CONNECTION) "docker rmi -f web-auth backend-debug backend-prod && rm -rf ~/.tmp && mkdir -p ~/.tmp"
+	@rsync -av --progress ./build ./.tmp ./scripts ./config ./migrations Makefile $(REMOTE_CONNECTION):~/
+	@ssh $(REMOTE_CONNECTION) "make load-tars nginx-init web-auth infra prod"
 
-# EXAMPLES:
-# PROD_BIN_NAME = "sberhack"
-# PROD_DIR = "~/prod"
-# PROD_WEB_DIR = "~/prod/web"
-# PROD_SYSTEMCTL_UNIT = "sberdevices-prod.service"
-# PROD_API_BASE_URL = "https://sdprovider.ru"
+.PHONY: check-scripts-x-flag
+check-scripts-x-flag:
+	@test -z "$$(find ./scripts -type f ! -perm -u=x)" || sudo chmod +x ./scripts/*
 
-# REGION: BUILD
-.PHONY: build-linux-debug
-build-linux-debug:
-	@echo ">> Building $(DEBUG_BIN_NAME) (debug) to $(CONNECTION)"
-	@env GOOS=linux GOARCH=amd64 go build -gcflags "all=-N -l" -o $(DEBUG_BIN_NAME) -v cmd/sberhack/*.go
-	@echo "   Done."
+.PHONY: check-gomplate
+check-gomplate: check-scripts-x-flag
+	@$(CURDIR)/scripts/check-gomplate.sh
 
-.PHONY: build-linux-prod
-build-linux-prod:
-	@echo ">> Building $(PROD_BIN_NAME) (production) to $(CONNECTION)"
-	@env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o $(PROD_BIN_NAME) -v cmd/sberhack/*.go
-	@echo "   Done."
-# END REGION: BUILD
+.PHONY: nginx-init
+nginx-init: check-gomplate
+	@$(CURDIR)/scripts/nginx-init.sh
 
-# REGION: UPLOADING
-.PHONY: upload-debug
-upload-debug:
-	@echo ">> Uploading $(DEBUG_BIN_NAME) (debug) to $(CONNECTION)"
-	@ssh $(CONNECTION) "systemctl stop $(DEBUG_SYSTEMCTL_UNIT)"
-	@ssh $(CONNECTION) "mkdir -p $(DEBUG_DIR)"
-	@scp $(DEBUG_BIN_NAME) $(CONNECTION):$(DEBUG_DIR)
-	@ssh $(CONNECTION) "chmod +x $(DEBUG_DIR)/$(DEBUG_BIN_NAME)"
-	@ssh $(CONNECTION) "systemctl start $(DEBUG_SYSTEMCTL_UNIT)"
-	@echo "   Done."
+.PHONY: infra
+infra: check-scripts-x-flag
+	@$(CURDIR)/scripts/infra.sh
 
-.PHONY: upload-prod
-upload-prod:
-	@echo ">> Uploading $(PROD_BIN_NAME) (production) to $(CONNECTION)"
-	@ssh $(CONNECTION) "systemctl stop $(PROD_SYSTEMCTL_UNIT)"
-	@ssh $(CONNECTION) "mkdir -p $(PROD_DIR)"
-	@scp $(PROD_BIN_NAME) $(CONNECTION):$(PROD_DIR)
-	@ssh $(CONNECTION) "chmod +x $(PROD_DIR)/$(PROD_BIN_NAME)"
-	@ssh $(CONNECTION) "systemctl start $(PROD_SYSTEMCTL_UNIT)"
-	@echo "   Done."
-# END REGION: UPLOADING
-
-# REGION: DEBUG
-.PHONY: run-debug
-run-debug:
-	@echo ">> Running Delve"
-	@ssh $(CONNECTION) "systemctl stop $(DEBUG_SYSTEMCTL_UNIT)"
-	@ssh $(CONNECTION) "\
-		dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient \
-		exec $(DEBUG_DIR)/$(DEBUG_BIN_NAME)"
-	@ssh $(CONNECTION) "systemctl start $(DEBUG_SYSTEMCTL_UNIT)"
-
-.PHONY: stop-debug
-stop-debug:
-	@echo ">> Stopping Delve"
-	@ssh $(CONNECTION) "pkill dlv || true"
+.PHONY: web-auth
+web-auth: check-scripts-x-flag
+	@$(CURDIR)/scripts/web-auth.sh
 
 .PHONY: debug
-debug: stop-debug build-linux-debug upload-debug run-debug
-# END REGION: DEBUG
+debug: check-scripts-x-flag
+	@$(CURDIR)/scripts/debug.sh
 
-# REGION: PROD
 .PHONY: prod
-prod: build-linux-prod upload-prod
-# END REGION: PROD
+prod: check-scripts-x-flag
+	@$(CURDIR)/scripts/prod.sh
 
-# REGION: WEB
-.PHONY: upload-debug-web
-upload-debug-web:
-	@echo ">> Uploading Web (debug)"
-	@cd web/auth && env VITE_API_BASE_URL=$(DEBUG_API_BASE_URL) npm run build
-	@ssh $(CONNECTION) "mkdir -p $(DEBUG_WEB_DIR)"
-	@scp -r web/auth/dist/* $(CONNECTION):$(DEBUG_WEB_DIR)
-	@echo "   Done."
+.PHONY: certs-renew-dry
+certs-renew-dry: check-scripts-x-flag
+	@$(CURDIR)/scripts/certs-renew-dry.sh
 
-.PHONY: upload-prod-web
-upload-prod-web:
-	@echo ">> Uploading Web (production)"
-	@cd web/auth && env VITE_API_BASE_URL=$(PROD_API_BASE_URL) npm run build
-	@ssh $(CONNECTION) "mkdir -p $(PROD_WEB_DIR)"
-	@scp -r web/auth/dist/* $(CONNECTION):$(PROD_WEB_DIR)
-	@echo "   Done."
-# END REGION: WEB
+.PHONY: certs-renew-force
+certs-renew-force: check-scripts-x-flag
+	@$(CURDIR)/scripts/certs-renew-force.sh
+
+.PHONY: load-tars
+load-tars: check-scripts-x-flag
+	@$(CURDIR)/scripts/load-tars.sh
+
+.PHONY: image-tar-web-auth
+image-tar-web-auth: check-scripts-x-flag
+	@OS=linux \
+	ARCH=amd64 \
+	TAG=web-auth \
+	DOCKERFILE=./build/web-auth/Dockerfile \
+	TAR_NAME=web-auth-image.tar \
+	$(CURDIR)/scripts/image-tar.sh
+
+.PHONY: image-tar-backend-debug
+image-tar-backend-debug: check-scripts-x-flag
+	@OS=linux \
+	ARCH=amd64 \
+	TAG=backend-debug \
+	DOCKERFILE=./build/debug/Dockerfile \
+	TAR_NAME=backend-debug-image.tar \
+	$(CURDIR)/scripts/image-tar.sh
+
+.PHONY: image-tar-backend-prod
+image-tar-backend-prod: check-scripts-x-flag
+	@OS=linux \
+	ARCH=amd64 \
+	TAG=backend-prod \
+	DOCKERFILE=./build/prod/Dockerfile \
+	TAR_NAME=backend-prod-image.tar \
+	$(CURDIR)/scripts/image-tar.sh
+

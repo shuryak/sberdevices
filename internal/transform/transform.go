@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/shuryak/sberdevices/pkg/sbertypes"
-	"github.com/shuryak/sberdevices/pkg/yandex"
+	sbertypes2 "github.com/shuryak/sberdevices/internal/pkg/sbertypes"
+	yandex2 "github.com/shuryak/sberdevices/internal/pkg/yandex"
 )
 
-func SberToYandexDevices(sberDevices []sbertypes.DeviceItem) []yandex.Device {
-	var yandexDevices []yandex.Device
+func SberToYandexDevices(sberDevices []sbertypes2.DeviceItem) []yandex2.Device {
+	var yandexDevices []yandex2.Device
 
 	for _, device := range sberDevices {
 		yandexDevices = append(yandexDevices, *SberToYandexDeviceInfo(&device))
@@ -20,8 +20,8 @@ func SberToYandexDevices(sberDevices []sbertypes.DeviceItem) []yandex.Device {
 	return yandexDevices
 }
 
-func SberToYandexDevicesState(sberDevices []sbertypes.DeviceItem) []yandex.Device {
-	var yandexDevices []yandex.Device
+func SberToYandexDevicesState(sberDevices []sbertypes2.DeviceItem) []yandex2.Device {
+	var yandexDevices []yandex2.Device
 
 	for _, device := range sberDevices {
 		yandexDevices = append(yandexDevices, *SberToYandexDeviceStates(&device))
@@ -30,8 +30,8 @@ func SberToYandexDevicesState(sberDevices []sbertypes.DeviceItem) []yandex.Devic
 	return yandexDevices
 }
 
-func SberToYandexDeviceStates(sberDevice *sbertypes.DeviceItem) *yandex.Device {
-	yandexDevice := &yandex.Device{}
+func SberToYandexDeviceStates(sberDevice *sbertypes2.DeviceItem) *yandex2.Device {
+	yandexDevice := &yandex2.Device{}
 
 	if sberDevice.Name != nil {
 		yandexDevice.ID = sberDevice.ID
@@ -39,12 +39,12 @@ func SberToYandexDeviceStates(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 
 	sberCommands, _, _ := getCommandsInfo(sberDevice)
 
-	reportedStates := make(map[sbertypes.StateCommand]*sbertypes.DeviceState)
+	reportedStates := make(map[sbertypes2.StateCommand]*sbertypes2.DeviceState)
 	for i := 0; i < len(sberDevice.ReportedState); i++ {
 		reportedStates[sberDevice.ReportedState[i].Key] = &sberDevice.ReportedState[i]
 	}
 
-	sberCommandsKeys := make([]sbertypes.StateCommand, 0, len(sberCommands))
+	sberCommandsKeys := make([]sbertypes2.StateCommand, 0, len(sberCommands))
 	for k := range sberCommands {
 		sberCommandsKeys = append(sberCommandsKeys, k)
 	}
@@ -59,7 +59,7 @@ func SberToYandexDeviceStates(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 		state := sberToYandexDeviceCapabilityState(k, reportedStates)
 
 		if state != nil {
-			yandexDevice.Capabilities = append(yandexDevice.Capabilities, yandex.DeviceCapability{
+			yandexDevice.Capabilities = append(yandexDevice.Capabilities, yandex2.DeviceCapability{
 				Type:  yandexCapabilityType,
 				State: state,
 			})
@@ -70,34 +70,34 @@ func SberToYandexDeviceStates(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 }
 
 func sberToYandexDeviceCapabilityState(
-	sberCommand sbertypes.StateCommand,
-	sberReportedStates map[sbertypes.StateCommand]*sbertypes.DeviceState,
-) *yandex.DeviceCapabilityState {
-	yandexState := &yandex.DeviceCapabilityState{
+	sberCommand sbertypes2.StateCommand,
+	sberReportedStates map[sbertypes2.StateCommand]*sbertypes2.DeviceState,
+) *yandex2.DeviceCapabilityState {
+	yandexState := &yandex2.DeviceCapabilityState{
 		Instance: stateCommandToInstanceMap[sberCommand],
 	}
 
 	reportedState := sberReportedStates[sberCommand]
 
 	switch yandexState.Instance {
-	case yandex.DeviceInstanceOn:
+	case yandex2.DeviceInstanceOn:
 		yandexState.Value = reportedState.BoolValue
-	case yandex.DeviceInstanceBrightness:
+	case yandex2.DeviceInstanceBrightness:
 		value, _ := strconv.Atoi(reportedState.IntegerValue) // TODO: handle errors for atoi everywhere
 		value /= 10
 		yandexState.Value = value
-	case yandex.DeviceInstanceTemperatureK:
+	case yandex2.DeviceInstanceTemperatureK:
 		value, _ := strconv.Atoi(reportedState.IntegerValue)
 		value = 7*value + 2000 // normalize [0, 1000] to [2000, 9000]
 		yandexState.Value = value
-	case yandex.DeviceInstanceScene:
+	case yandex2.DeviceInstanceScene:
 		var ok bool
-		yandexState.Value, ok = sberColorSceneIDToYandexMap[sbertypes.ColorSceneID(reportedState.EnumValue)] // TODO: handle ""
+		yandexState.Value, ok = sberColorSceneIDToYandexMap[sbertypes2.ColorSceneID(reportedState.EnumValue)] // TODO: handle ""
 		if !ok {
 			return nil
 		}
-	case yandex.DeviceInstanceHSV:
-		yandexState.Value = yandex.DeviceHSVColor{
+	case yandex2.DeviceInstanceHSV:
+		yandexState.Value = yandex2.DeviceHSVColor{
 			Hue:        reportedState.ColorValue.Hue,
 			Saturation: reportedState.ColorValue.Saturation / 10, // TODO: ?
 			Value:      reportedState.ColorValue.Value / 10,      // TODO: ?
@@ -109,8 +109,8 @@ func sberToYandexDeviceCapabilityState(
 	return yandexState
 }
 
-func SberToYandexDeviceInfo(sberDevice *sbertypes.DeviceItem) *yandex.Device {
-	yandexDevice := &yandex.Device{}
+func SberToYandexDeviceInfo(sberDevice *sbertypes2.DeviceItem) *yandex2.Device {
+	yandexDevice := &yandex2.Device{}
 
 	if sberDevice.Name != nil {
 		yandexDevice.ID = sberDevice.ID
@@ -120,7 +120,7 @@ func SberToYandexDeviceInfo(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 	yandexDevice.Description = sberDevice.DeviceTypeName
 
 	if sberDevice.DeviceInfo != nil {
-		yandexDevice.DeviceInfo = &yandex.DeviceInfo{
+		yandexDevice.DeviceInfo = &yandex2.DeviceInfo{
 			Manufacturer: sberDevice.DeviceInfo.Manufacturer,
 			Model:        sberDevice.DeviceInfo.Model,
 			HWVersion:    sberDevice.DeviceInfo.HWVersion,
@@ -132,18 +132,18 @@ func SberToYandexDeviceInfo(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 		}
 	}
 
-	var sberCommands, allStateFields map[sbertypes.StateCommand]struct{}
+	var sberCommands, allStateFields map[sbertypes2.StateCommand]struct{}
 	sberCommands, allStateFields, yandexDevice.Type = getCommandsInfo(sberDevice)
 
-	capabilitiesMap := make(map[yandex.DeviceCapabilityType]*yandex.DeviceCapability)
-	parametersMap := make(map[yandex.DeviceCapabilityType]*yandex.DeviceCapabilitiesParameters)
+	capabilitiesMap := make(map[yandex2.DeviceCapabilityType]*yandex2.DeviceCapability)
+	parametersMap := make(map[yandex2.DeviceCapabilityType]*yandex2.DeviceCapabilitiesParameters)
 
 	for _, attribute := range sberDevice.Attributes {
 		if _, ok := sberCommands[attribute.Key]; !ok {
 			continue
 		}
 
-		if attribute.Key == sbertypes.StateCommandLightMode { // TODO: temp
+		if attribute.Key == sbertypes2.StateCommandLightMode { // TODO: temp
 			continue
 		}
 
@@ -154,7 +154,7 @@ func SberToYandexDeviceInfo(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 
 		_, retrievable := allStateFields[attribute.Key]
 
-		capabilitiesMap[yandexCapabilityType] = &yandex.DeviceCapability{
+		capabilitiesMap[yandexCapabilityType] = &yandex2.DeviceCapability{
 			Type:        yandexCapabilityType,
 			Retrievable: &retrievable,
 			Reportable:  false,
@@ -192,7 +192,7 @@ func SberToYandexDeviceInfo(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 		}
 	}
 
-	capabilitiesKeys := make([]yandex.DeviceCapabilityType, 0, len(capabilitiesMap))
+	capabilitiesKeys := make([]yandex2.DeviceCapabilityType, 0, len(capabilitiesMap))
 	for k := range capabilitiesMap {
 		capabilitiesKeys = append(capabilitiesKeys, k)
 	}
@@ -211,64 +211,64 @@ func SberToYandexDeviceInfo(sberDevice *sbertypes.DeviceItem) *yandex.Device {
 }
 
 func YandexToSberDeviceState(
-	currentState map[sbertypes.StateCommand]sbertypes.DeviceState,
-	yandexCapability *yandex.DeviceCapability,
-) []*sbertypes.DeviceState {
-	var states []*sbertypes.DeviceState
+	currentState map[sbertypes2.StateCommand]sbertypes2.DeviceState,
+	yandexCapability *yandex2.DeviceCapability,
+) []*sbertypes2.DeviceState {
+	var states []*sbertypes2.DeviceState
 
 	key := instanceToStateCommandMap[yandexCapability.State.Instance]
 	now := time.Now()
 
 	switch yandexCapability.State.Instance {
-	case yandex.DeviceInstanceOn:
-		states = append(states, &sbertypes.DeviceState{
-			Type:      sbertypes.SberDataTypeBool,
+	case yandex2.DeviceInstanceOn:
+		states = append(states, &sbertypes2.DeviceState{
+			Type:      sbertypes2.SberDataTypeBool,
 			BoolValue: yandexCapability.State.Value.(bool),
 		})
-	case yandex.DeviceInstanceBrightness:
+	case yandex2.DeviceInstanceBrightness:
 		value := int(yandexCapability.State.Value.(float64)) * 10
 
-		cur := currentState[sbertypes.StateCommandLightColour]
+		cur := currentState[sbertypes2.StateCommandLightColour]
 
 		states = append(states,
-			&sbertypes.DeviceState{
+			&sbertypes2.DeviceState{
 				Key:  cur.Key,
-				Type: sbertypes.SberDataTypeColor,
-				ColorValue: &sbertypes.DeviceStateColorValue{
+				Type: sbertypes2.SberDataTypeColor,
+				ColorValue: &sbertypes2.DeviceStateColorValue{
 					Hue:        cur.ColorValue.Hue,
 					Saturation: cur.ColorValue.Saturation,
 					Value:      value,
 				},
 			},
-			&sbertypes.DeviceState{
-				Key:          sbertypes.StateCommandLightBrightness,
-				Type:         sbertypes.SberDataTypeInteger,
+			&sbertypes2.DeviceState{
+				Key:          sbertypes2.StateCommandLightBrightness,
+				Type:         sbertypes2.SberDataTypeInteger,
 				IntegerValue: strconv.Itoa(value),
 			},
 		)
-	case yandex.DeviceInstanceTemperatureK:
+	case yandex2.DeviceInstanceTemperatureK:
 		value := int(yandexCapability.State.Value.(float64))
 		value = ((value - 2000) * 1000) / 7000
 
 		states = append(states,
-			&sbertypes.DeviceState{
-				Key:       sbertypes.StateCommandLightMode,
-				Type:      sbertypes.SberDataTypeEnum,
-				EnumValue: sbertypes.LightModeWhite,
+			&sbertypes2.DeviceState{
+				Key:       sbertypes2.StateCommandLightMode,
+				Type:      sbertypes2.SberDataTypeEnum,
+				EnumValue: sbertypes2.LightModeWhite,
 			},
-			&sbertypes.DeviceState{
-				Type:         sbertypes.SberDataTypeInteger,
+			&sbertypes2.DeviceState{
+				Type:         sbertypes2.SberDataTypeInteger,
 				IntegerValue: strconv.Itoa(value),
 			},
 		)
-	case yandex.DeviceInstanceScene:
-		states = append(states, &sbertypes.DeviceState{
-			Type: sbertypes.SberDataTypeEnum,
+	case yandex2.DeviceInstanceScene:
+		states = append(states, &sbertypes2.DeviceState{
+			Type: sbertypes2.SberDataTypeEnum,
 			IntegerValue: string(
-				yandexMapToSberColorSceneID[yandex.ColorSceneID(yandexCapability.State.Value.(string))],
+				yandexMapToSberColorSceneID[yandex2.ColorSceneID(yandexCapability.State.Value.(string))],
 			),
 		})
-	case yandex.DeviceInstanceHSV:
+	case yandex2.DeviceInstanceHSV:
 		value := make(map[string]interface{})
 		if yandexCapability.State.Value == nil { // for Marusia command "turn on the black color"
 			value["h"] = float64(0)
@@ -279,17 +279,17 @@ func YandexToSberDeviceState(
 			value = yandexCapability.State.Value.(map[string]interface{})
 		}
 
-		cur := currentState[sbertypes.StateCommandLightColour]
+		cur := currentState[sbertypes2.StateCommandLightColour]
 
 		states = append(states,
-			&sbertypes.DeviceState{
-				Key:       sbertypes.StateCommandLightMode,
-				Type:      sbertypes.SberDataTypeEnum,
-				EnumValue: sbertypes.LightModeColour,
+			&sbertypes2.DeviceState{
+				Key:       sbertypes2.StateCommandLightMode,
+				Type:      sbertypes2.SberDataTypeEnum,
+				EnumValue: sbertypes2.LightModeColour,
 			},
-			&sbertypes.DeviceState{
-				Type: sbertypes.SberDataTypeColor,
-				ColorValue: &sbertypes.DeviceStateColorValue{
+			&sbertypes2.DeviceState{
+				Type: sbertypes2.SberDataTypeColor,
+				ColorValue: &sbertypes2.DeviceStateColorValue{
 					Hue:        int(value["h"].(float64)),
 					Saturation: int(value["s"].(float64)) * 10,
 					Value:      cur.ColorValue.Value,
@@ -308,79 +308,79 @@ func YandexToSberDeviceState(
 	return states
 }
 
-func makeYandexCapabilitiesParameters(sberAttribute *sbertypes.DeviceAttribute) *yandex.DeviceCapabilitiesParameters {
+func makeYandexCapabilitiesParameters(sberAttribute *sbertypes2.DeviceAttribute) *yandex2.DeviceCapabilitiesParameters {
 	switch sberAttribute.Key {
-	case sbertypes.StateCommandOnOff, sbertypes.StateCommandSwitchLED:
-		return &yandex.DeviceCapabilitiesParameters{
+	case sbertypes2.StateCommandOnOff, sbertypes2.StateCommandSwitchLED:
+		return &yandex2.DeviceCapabilitiesParameters{
 			Split: nilableFalse,
 		}
-	case sbertypes.StateCommandLightBrightness:
+	case sbertypes2.StateCommandLightBrightness:
 		if sberAttribute.IntValues == nil {
 			return nil
 		}
 
-		return &yandex.DeviceCapabilitiesParameters{
-			Instance:     yandex.DeviceInstanceBrightness,
-			Unit:         yandex.UnitPercent,
+		return &yandex2.DeviceCapabilitiesParameters{
+			Instance:     yandex2.DeviceInstanceBrightness,
+			Unit:         yandex2.UnitPercent,
 			RandomAccess: nilableTrue,
-			Range: &yandex.DeviceCapabilitiesParametersRange{
+			Range: &yandex2.DeviceCapabilitiesParametersRange{
 				// TODO: range min_max * 0.1 everywhere, problem with min = 5%. For yandex.UnitPercent
 				Min:       0,
 				Max:       float64(sberAttribute.IntValues.Range.Max / 10),
 				Precision: float64(sberAttribute.IntValues.Range.Step),
 			},
 		}
-	case sbertypes.StateCommandLightColourTemp:
+	case sbertypes2.StateCommandLightColourTemp:
 		if sberAttribute.IntValues == nil {
 			return nil
 		}
 
-		return &yandex.DeviceCapabilitiesParameters{
-			Instance: yandex.DeviceInstanceTemperatureK,
-			TemperatureK: &yandex.DeviceCapabilitiesParametersRange{
+		return &yandex2.DeviceCapabilitiesParameters{
+			Instance: yandex2.DeviceInstanceTemperatureK,
+			TemperatureK: &yandex2.DeviceCapabilitiesParametersRange{
 				// TODO: normalize int_values.range.min and int_values.range.max to [2000, 9000]
 				Min:       2000,
 				Max:       9000,
 				Precision: float64(sberAttribute.IntValues.Range.Step),
 			},
 		}
-	case sbertypes.StateCommandLightScene:
+	case sbertypes2.StateCommandLightScene:
 		if sberAttribute.EnumValues == nil {
 			return nil
 		}
 
-		var scenes []yandex.DeviceColorSceneItem
+		var scenes []yandex2.DeviceColorSceneItem
 		for _, scene := range sberAttribute.EnumValues.Values {
-			scenes = append(scenes, yandex.DeviceColorSceneItem{
-				ID: sberColorSceneIDToYandexMap[sbertypes.ColorSceneID(scene)],
+			scenes = append(scenes, yandex2.DeviceColorSceneItem{
+				ID: sberColorSceneIDToYandexMap[sbertypes2.ColorSceneID(scene)],
 			})
 		}
 
-		return &yandex.DeviceCapabilitiesParameters{
-			Instance: yandex.DeviceInstanceScene,
-			ColorScene: &yandex.DeviceColorScene{
+		return &yandex2.DeviceCapabilitiesParameters{
+			Instance: yandex2.DeviceInstanceScene,
+			ColorScene: &yandex2.DeviceColorScene{
 				Scenes: scenes,
 			},
 		}
-	case sbertypes.StateCommandLightMode:
+	case sbertypes2.StateCommandLightMode:
 		// TODO: light_mode
 		return nil
-	case sbertypes.StateCommandLightColour:
-		return &yandex.DeviceCapabilitiesParameters{
-			ColorModel: yandex.DeviceColorModelHSV,
+	case sbertypes2.StateCommandLightColour:
+		return &yandex2.DeviceCapabilitiesParameters{
+			ColorModel: yandex2.DeviceColorModelHSV,
 		}
 	}
 
 	return nil
 }
 
-func getCommandsInfo(sberDevice *sbertypes.DeviceItem) (
-	commands map[sbertypes.StateCommand]struct{},
-	allStateFields map[sbertypes.StateCommand]struct{},
-	yandexDeviceType yandex.DeviceType,
+func getCommandsInfo(sberDevice *sbertypes2.DeviceItem) (
+	commands map[sbertypes2.StateCommand]struct{},
+	allStateFields map[sbertypes2.StateCommand]struct{},
+	yandexDeviceType yandex2.DeviceType,
 ) {
-	commands = make(map[sbertypes.StateCommand]struct{})
-	allStateFields = make(map[sbertypes.StateCommand]struct{})
+	commands = make(map[sbertypes2.StateCommand]struct{})
+	allStateFields = make(map[sbertypes2.StateCommand]struct{})
 
 	for _, command := range sberDevice.Commands {
 		commands[command.Key] = struct{}{}
@@ -391,11 +391,11 @@ func getCommandsInfo(sberDevice *sbertypes.DeviceItem) (
 
 	for _, category := range sberDevice.FullCategories {
 		if category.Slug == "light" || category.Slug == "led_strip" { // TODO: constants for slugs
-			yandexDeviceType = yandex.DeviceTypeLightStrip
+			yandexDeviceType = yandex2.DeviceTypeLightStrip
 
 			// switch_led and on_off have the same effect
-			if _, ok := commands[sbertypes.StateCommandSwitchLED]; ok {
-				delete(commands, sbertypes.StateCommandOnOff)
+			if _, ok := commands[sbertypes2.StateCommandSwitchLED]; ok {
+				delete(commands, sbertypes2.StateCommandOnOff)
 			}
 		}
 	}
@@ -403,52 +403,52 @@ func getCommandsInfo(sberDevice *sbertypes.DeviceItem) (
 	return
 }
 
-var stateCommandToCapabilityMap = map[sbertypes.StateCommand]yandex.DeviceCapabilityType{
-	sbertypes.StateCommandOnOff:           yandex.DeviceCapabilityTypeOnOff,
-	sbertypes.StateCommandSwitchLED:       yandex.DeviceCapabilityTypeOnOff,
-	sbertypes.StateCommandLightBrightness: yandex.DeviceCapabilityTypeRange,
-	sbertypes.StateCommandLightColourTemp: yandex.DeviceCapabilityTypeColorSetting,
-	sbertypes.StateCommandLightScene:      yandex.DeviceCapabilityTypeColorSetting,
-	sbertypes.StateCommandLightMode:       yandex.DeviceCapabilityTypeMode, // TODO: ?
-	sbertypes.StateCommandLightColour:     yandex.DeviceCapabilityTypeColorSetting,
+var stateCommandToCapabilityMap = map[sbertypes2.StateCommand]yandex2.DeviceCapabilityType{
+	sbertypes2.StateCommandOnOff:           yandex2.DeviceCapabilityTypeOnOff,
+	sbertypes2.StateCommandSwitchLED:       yandex2.DeviceCapabilityTypeOnOff,
+	sbertypes2.StateCommandLightBrightness: yandex2.DeviceCapabilityTypeRange,
+	sbertypes2.StateCommandLightColourTemp: yandex2.DeviceCapabilityTypeColorSetting,
+	sbertypes2.StateCommandLightScene:      yandex2.DeviceCapabilityTypeColorSetting,
+	sbertypes2.StateCommandLightMode:       yandex2.DeviceCapabilityTypeMode, // TODO: ?
+	sbertypes2.StateCommandLightColour:     yandex2.DeviceCapabilityTypeColorSetting,
 }
 
-var stateCommandToInstanceMap = map[sbertypes.StateCommand]yandex.DeviceInstance{
-	sbertypes.StateCommandOnOff:           yandex.DeviceInstanceOn,
-	sbertypes.StateCommandSwitchLED:       yandex.DeviceInstanceOn,
-	sbertypes.StateCommandLightBrightness: yandex.DeviceInstanceBrightness,
-	sbertypes.StateCommandLightColourTemp: yandex.DeviceInstanceTemperatureK,
-	sbertypes.StateCommandLightScene:      yandex.DeviceInstanceScene,
-	sbertypes.StateCommandLightMode:       "", // TODO: ?
-	sbertypes.StateCommandLightColour:     yandex.DeviceInstanceHSV,
+var stateCommandToInstanceMap = map[sbertypes2.StateCommand]yandex2.DeviceInstance{
+	sbertypes2.StateCommandOnOff:           yandex2.DeviceInstanceOn,
+	sbertypes2.StateCommandSwitchLED:       yandex2.DeviceInstanceOn,
+	sbertypes2.StateCommandLightBrightness: yandex2.DeviceInstanceBrightness,
+	sbertypes2.StateCommandLightColourTemp: yandex2.DeviceInstanceTemperatureK,
+	sbertypes2.StateCommandLightScene:      yandex2.DeviceInstanceScene,
+	sbertypes2.StateCommandLightMode:       "", // TODO: ?
+	sbertypes2.StateCommandLightColour:     yandex2.DeviceInstanceHSV,
 }
 
-var instanceToStateCommandMap = map[yandex.DeviceInstance]sbertypes.StateCommand{
-	yandex.DeviceInstanceOn:           sbertypes.StateCommandOnOff,
-	yandex.DeviceInstanceBrightness:   sbertypes.StateCommandLightBrightness,
-	yandex.DeviceInstanceTemperatureK: sbertypes.StateCommandLightColourTemp,
-	yandex.DeviceInstanceScene:        sbertypes.StateCommandLightScene,
-	yandex.DeviceInstanceHSV:          sbertypes.StateCommandLightColour,
+var instanceToStateCommandMap = map[yandex2.DeviceInstance]sbertypes2.StateCommand{
+	yandex2.DeviceInstanceOn:           sbertypes2.StateCommandOnOff,
+	yandex2.DeviceInstanceBrightness:   sbertypes2.StateCommandLightBrightness,
+	yandex2.DeviceInstanceTemperatureK: sbertypes2.StateCommandLightColourTemp,
+	yandex2.DeviceInstanceScene:        sbertypes2.StateCommandLightScene,
+	yandex2.DeviceInstanceHSV:          sbertypes2.StateCommandLightColour,
 }
 
-var sberColorSceneIDToYandexMap = map[sbertypes.ColorSceneID]yandex.ColorSceneID{
-	sbertypes.ColorSceneIDCandle:    yandex.ColorSceneIDCandle,
-	sbertypes.ColorSceneIDArctic:    yandex.ColorSceneIDOcean,
-	sbertypes.ColorSceneIDRomantic:  yandex.ColorSceneIDRomance,
-	sbertypes.ColorSceneIDSunset:    yandex.ColorSceneIDSunset,
-	sbertypes.ColorSceneIDDawn:      yandex.ColorSceneIDSunrise,
-	sbertypes.ColorSceneIDChristmas: yandex.ColorSceneIDGarland,
-	sbertypes.ColorSceneIDFito:      yandex.ColorSceneIDRest,
+var sberColorSceneIDToYandexMap = map[sbertypes2.ColorSceneID]yandex2.ColorSceneID{
+	sbertypes2.ColorSceneIDCandle:    yandex2.ColorSceneIDCandle,
+	sbertypes2.ColorSceneIDArctic:    yandex2.ColorSceneIDOcean,
+	sbertypes2.ColorSceneIDRomantic:  yandex2.ColorSceneIDRomance,
+	sbertypes2.ColorSceneIDSunset:    yandex2.ColorSceneIDSunset,
+	sbertypes2.ColorSceneIDDawn:      yandex2.ColorSceneIDSunrise,
+	sbertypes2.ColorSceneIDChristmas: yandex2.ColorSceneIDGarland,
+	sbertypes2.ColorSceneIDFito:      yandex2.ColorSceneIDRest,
 }
 
-var yandexMapToSberColorSceneID = map[yandex.ColorSceneID]sbertypes.ColorSceneID{
-	yandex.ColorSceneIDCandle:  sbertypes.ColorSceneIDCandle,
-	yandex.ColorSceneIDOcean:   sbertypes.ColorSceneIDArctic,
-	yandex.ColorSceneIDRomance: sbertypes.ColorSceneIDRomantic,
-	yandex.ColorSceneIDSunset:  sbertypes.ColorSceneIDSunset,
-	yandex.ColorSceneIDSunrise: sbertypes.ColorSceneIDDawn,
-	yandex.ColorSceneIDGarland: sbertypes.ColorSceneIDChristmas,
-	yandex.ColorSceneIDRest:    sbertypes.ColorSceneIDFito,
+var yandexMapToSberColorSceneID = map[yandex2.ColorSceneID]sbertypes2.ColorSceneID{
+	yandex2.ColorSceneIDCandle:  sbertypes2.ColorSceneIDCandle,
+	yandex2.ColorSceneIDOcean:   sbertypes2.ColorSceneIDArctic,
+	yandex2.ColorSceneIDRomance: sbertypes2.ColorSceneIDRomantic,
+	yandex2.ColorSceneIDSunset:  sbertypes2.ColorSceneIDSunset,
+	yandex2.ColorSceneIDSunrise: sbertypes2.ColorSceneIDDawn,
+	yandex2.ColorSceneIDGarland: sbertypes2.ColorSceneIDChristmas,
+	yandex2.ColorSceneIDRest:    sbertypes2.ColorSceneIDFito,
 }
 
 func nilableBool(v bool) *bool {

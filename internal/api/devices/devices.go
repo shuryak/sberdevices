@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/shuryak/sberdevices/internal/api"
+	"github.com/shuryak/sberdevices/internal/pkg/smarthome/client"
+	"github.com/shuryak/sberdevices/internal/pkg/yandex"
 	"github.com/shuryak/sberdevices/internal/transform"
-	"github.com/shuryak/sberdevices/pkg/smarthome/client"
-	"github.com/shuryak/sberdevices/pkg/yandex"
 )
 
 type listReq struct{}

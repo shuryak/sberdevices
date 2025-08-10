@@ -2,11 +2,13 @@ package oauth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/shuryak/sberdevices/internal/model"
-	"github.com/shuryak/sberdevices/pkg/pkce"
+	"github.com/shuryak/sberdevices/internal/pkg/pkce"
+	"github.com/shuryak/sberdevices/internal/pkg/strrand"
 )
 
 type CodeStorage interface {
@@ -15,34 +17,34 @@ type CodeStorage interface {
 		thirdPartyPKCEPair *pkce.Pair,
 		thirdPartyOTPReceiverID, thirdPartyAuthOperationID string,
 	) (authCode string, err error)
+	SetAccessToken(ctx context.Context, authCode, accessToken string) error
 	Get(ctx context.Context, authCode string) (*model.AuthCodePayload, error)
-	Delete(ctx context.Context, authCode string) error
+	DeleteCodeAndGetSession(ctx context.Context, authCode string) (*model.Session, error)
 }
 
-// ThirdPartyAuthProvider
+// SmartHomeAuthProvider
 // TODO: describe otpReceiverID == phoneNumber, authOperationID == OUID
 // TODO: encapsulate pkcePair on new struct type crossRequestSpecificData
-type ThirdPartyAuthProvider interface {
+type SmartHomeAuthProvider interface {
 	SendOTP(ctx context.Context, otpReceiverID string) (pkcePair *pkce.Pair, authOperationID string, err error)
 	GetTokensByOTP(ctx context.Context, authOperationID string, pkcePair *pkce.Pair, otp string) (*Tokens, error)
 	RefreshTokens(ctx context.Context, refreshToken string) (*Tokens, error)
 }
 
 type SessionStorage interface {
-	Create(
-		ctx context.Context,
-		authCode, otpReceiverID, thirdPartyAccessToken, thirdPartyRefreshToken string,
-		thirdPartyTokenTTL, refreshTokenTTL time.Duration,
-	) (*model.Session, error)
-	GetByAuthCode(ctx context.Context, authCode string) (*model.Session, error)
+	Upsert(ctx context.Context, oldAccessToken string, session *model.Session) (*model.Session, error)
 	GetByAccessToken(ctx context.Context, accessToken string) (*model.Session, error)
 	GetByRefreshToken(ctx context.Context, refreshToken string) (*model.Session, error)
-	Refresh(
-		ctx context.Context,
-		session *model.Session, thirdPartyAccessToken, thirdPartyRefreshToken string,
-		thirdPartyTokenTTL, refreshTokenTTL time.Duration,
-	) (*model.Session, error)
 }
+
+type StorageUnitOfWork interface {
+	SessionStorage() SessionStorage
+	OAuthCodeStorage() CodeStorage
+	Commit(ctx context.Context) error
+	Rollback(ctx context.Context) error
+}
+
+type StorageUnitOfWorkFactory func(ctx context.Context) (StorageUnitOfWork, error)
 
 type Tokens struct {
 	AccessToken    string
@@ -51,17 +53,31 @@ type Tokens struct {
 }
 
 type CodeFlowWithOTP struct {
-	codeStorage    CodeStorage
-	sessionStorage SessionStorage
-	authProvider   ThirdPartyAuthProvider
+	codeStorage       CodeStorage
+	sessionStorage    SessionStorage
+	storageUoWFactory StorageUnitOfWorkFactory
+	authProvider      SmartHomeAuthProvider
+
+	accessTokenLength  uint
+	refreshTokenLength uint
 }
 
-func NewCodeFlowWithOTP(cs CodeStorage, ss SessionStorage, ap ThirdPartyAuthProvider) *CodeFlowWithOTP {
+func NewCodeFlowWithOTP(
+	codeStorage CodeStorage, sessionStorage SessionStorage, uowFactory StorageUnitOfWorkFactory,
+	authProvider SmartHomeAuthProvider, accessTokenLength, refreshTokenLength uint,
+) *CodeFlowWithOTP {
 	return &CodeFlowWithOTP{
-		codeStorage:    cs,
-		sessionStorage: ss,
-		authProvider:   ap,
+		codeStorage:        codeStorage,
+		sessionStorage:     sessionStorage,
+		storageUoWFactory:  uowFactory,
+		authProvider:       authProvider,
+		accessTokenLength:  accessTokenLength,
+		refreshTokenLength: refreshTokenLength,
 	}
+}
+
+func (f *CodeFlowWithOTP) NewStorageUnitOfWork(ctx context.Context) (StorageUnitOfWork, error) {
+	return f.storageUoWFactory(ctx)
 }
 
 func (f *CodeFlowWithOTP) Start(ctx context.Context, otpReceiverID string) (authCode string, err error) {
@@ -73,50 +89,49 @@ func (f *CodeFlowWithOTP) Start(ctx context.Context, otpReceiverID string) (auth
 	return f.codeStorage.Create(ctx, pkcePair, otpReceiverID, authOperationID)
 }
 
-func (f *CodeFlowWithOTP) Get(ctx context.Context, authCode string) (*model.AuthCodePayload, error) {
-	return f.codeStorage.Get(ctx, authCode)
-}
-
-func (f *CodeFlowWithOTP) Delete(ctx context.Context, authCode string) error {
-	return f.codeStorage.Delete(ctx, authCode)
-}
-
 func (f *CodeFlowWithOTP) CreateSession(ctx context.Context, authCode, otp string) (*model.Session, error) {
-	// TODO: check for access_token existing
-
-	codePayload, err := f.codeStorage.Get(ctx, authCode)
+	uow, err := f.NewStorageUnitOfWork(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get auth code payload, err: %w", err)
+		return nil, fmt.Errorf("failed to create new storage unit of work, err: %w", err)
 	}
 
-	err = f.codeStorage.Delete(ctx, authCode)
+	accessToken := strrand.RandSeqStr(f.accessTokenLength)
+
+	codePayload, err := uow.OAuthCodeStorage().Get(ctx, authCode)
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete auth code, err: %w", err)
+		return nil, errors.Join(fmt.Errorf("failed to delete auth code, err: %w", err), uow.Rollback(ctx))
 	}
 
-	tokens, err := f.authProvider.GetTokensByOTP(
-		ctx,
-		codePayload.ThirdPartyAuthOperationID,
-		codePayload.ThirdPartyPKCEPair,
-		otp,
+	smartHomeTokens, err := f.authProvider.GetTokensByOTP(
+		ctx, codePayload.SmartHomeAuthOperationID, codePayload.SmartHomePKCEPair, otp,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to exchange otp, err: %w", err)
+		return nil, errors.Join(fmt.Errorf("failed to exchange otp, err: %w", err), uow.Rollback(ctx))
 	}
 
-	return f.sessionStorage.Create(
-		context.Background(),
-		authCode,
-		codePayload.ThirdPartyOTPReceiverID,
-		tokens.AccessToken,
-		tokens.RefreshToken,
-		tokens.AccessTokenTTL,
-		time.Hour*24*30, // TODO: ttl
+	session, err := uow.SessionStorage().Upsert(
+		ctx, "", model.NewSession(
+			codePayload.SmartHomeOTPReceiverID, accessToken, strrand.RandSeqStr(f.refreshTokenLength),
+			smartHomeTokens.AccessToken, smartHomeTokens.AccessTokenTTL, smartHomeTokens.RefreshToken,
+		),
 	)
+	if err != nil {
+		return nil, errors.Join(fmt.Errorf("failed to create new session, err: %w", err), uow.Rollback(ctx))
+	}
+
+	if err = uow.OAuthCodeStorage().SetAccessToken(ctx, authCode, accessToken); err != nil {
+		return nil, errors.Join(fmt.Errorf("failed to set access token, err: %w", err), uow.Rollback(ctx))
+	}
+
+	if err = uow.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit new session, err: %w", err)
+	}
+
+	return session, nil
 }
 
-func (f *CodeFlowWithOTP) GetSessionByAuthCode(ctx context.Context, authCode string) (*model.Session, error) {
-	return f.sessionStorage.GetByAuthCode(ctx, authCode)
+func (f *CodeFlowWithOTP) ExchangeAuthCode(ctx context.Context, authCode string) (*model.Session, error) {
+	return f.codeStorage.DeleteCodeAndGetSession(ctx, authCode)
 }
 
 func (f *CodeFlowWithOTP) GetSessionByAccessToken(ctx context.Context, accessToken string) (*model.Session, error) {
@@ -124,22 +139,22 @@ func (f *CodeFlowWithOTP) GetSessionByAccessToken(ctx context.Context, accessTok
 }
 
 func (f *CodeFlowWithOTP) RefreshSession(ctx context.Context, refreshToken string) (*model.Session, error) {
+	// TODO: optimize (2 queries -> 1 query)
+
 	session, err := f.sessionStorage.GetByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	tokens, err := f.authProvider.RefreshTokens(ctx, session.ThirdPartyRefreshToken)
+	tokens, err := f.authProvider.RefreshTokens(ctx, session.SmartHomeRefreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	return f.sessionStorage.Refresh(
-		context.Background(),
-		session,
-		tokens.AccessToken,
-		tokens.RefreshToken,
-		tokens.AccessTokenTTL,
-		time.Hour*24*30, // TODO: ttl
+	refreshed := session.Refresh(
+		strrand.RandSeqStr(f.accessTokenLength), strrand.RandSeqStr(f.refreshTokenLength), tokens.AccessToken,
+		tokens.AccessTokenTTL, tokens.RefreshToken,
 	)
+
+	return f.sessionStorage.Upsert(ctx, session.AccessToken, refreshed)
 }

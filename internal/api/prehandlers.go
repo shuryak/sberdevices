@@ -14,7 +14,7 @@ func CORS(ctx *Context) {
 	ctx.SetHeader("Access-Control-Allow-Methods", "POST, OPTIONS, GET")
 
 	if ctx.GetMethod() == "OPTIONS" {
-		_ = ctx.WriteResponse(http.StatusOK, nil)
+		_ = ctx.WriteResponse(nil, http.StatusOK)
 		ctx.StopChain()
 	}
 }
